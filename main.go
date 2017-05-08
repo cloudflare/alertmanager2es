@@ -198,18 +198,8 @@ type notification struct {
 	Receiver          string            `json:"receiver"`
 	Status            string            `json:"status"`
 	Version           string            `json:"version"`
-
-	// Elasticsearch can't cope with unsigned integers, so convert groupKey
-	// to a string using a custom type
-	// Overrides notify.WebhookMessage.GroupKey
-	GroupKey groupKey `json:"groupKey"`
+	GroupKey          string            `json:"groupKey"`
 
 	// Timestamp records when the alert notification was received
 	Timestamp string `json:"@timestamp"`
-}
-
-type groupKey uint64
-
-func (g *groupKey) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf(`"%d"`, *g)), nil
 }
