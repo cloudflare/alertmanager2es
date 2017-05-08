@@ -48,7 +48,7 @@ string.
 To use alertmanager2es, you'll need:
 
 - an [Elasticsearch][] cluster
-- [Alertmanager][]
+- [Alertmanager][] 0.6.0 or above
 
 To build alertmanager2es, you'll need:
 
