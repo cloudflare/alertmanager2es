@@ -17,7 +17,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-const supportedWebhookVersion = "3"
+const supportedWebhookVersion = "4"
 
 var (
 	addr        = "localhost:9097"
