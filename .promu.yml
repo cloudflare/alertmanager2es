@@ -4,17 +4,16 @@ build:
     binaries:
         - name: alertmanager2es
           path: .
-    flags: -a -tags netgo
     ldflags: |
         -X {{repoPath}}/vendor/github.com/prometheus/common/version.Version={{.Version}}
         -X {{repoPath}}/vendor/github.com/prometheus/common/version.Revision={{.Revision}}
         -X {{repoPath}}/vendor/github.com/prometheus/common/version.Branch={{.Branch}}
         -X {{repoPath}}/vendor/github.com/prometheus/common/version.BuildUser={{user}}@{{host}}
         -X {{repoPath}}/vendor/github.com/prometheus/common/version.BuildDate={{date "20060102-15:04:05"}}
+
 tarball:
     files:
         - LICENSE
-        - NOTICE
 crossbuild:
     platforms:
         - linux/amd64
@@ -41,4 +40,3 @@ crossbuild:
         - netbsd/arm
         - linux/ppc64
         - linux/ppc64le
-

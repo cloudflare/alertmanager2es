@@ -1,6 +1,6 @@
 GO    := GO15VENDOREXPERIMENT=1 go
 PROMU := $(GOPATH)/bin/promu
-pkgs   = $(shell $(GO) list ./... | grep -v -E '/vendor/|/ui')
+pkgs   = $(shell $(GO) list ./... | grep -v -E '/vendor/')
 
 PREFIX                  ?= $(shell pwd)
 BIN_DIR                 ?= $(shell pwd)
@@ -42,16 +42,10 @@ docker:
 	@echo ">> building docker image"
 	@docker build -t "$(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)" .
 
-assets:
-	@echo ">> writing assets"
-	-@$(GO) get -u github.com/jteeuwen/go-bindata/...
-
 promu:
 	@GOOS=$(shell uname -s | tr A-Z a-z) \
 	GOARCH=$(subst x86_64,amd64,$(patsubst i%86,386,$(shell uname -m))) \
 	$(GO) get -u github.com/prometheus/promu
-
-proto:
 
 
 .PHONY: all style format build test vet assets tarball docker promu proto
