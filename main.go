@@ -155,6 +155,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	req.Header.Set("User-Agent", versionString)
+	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
