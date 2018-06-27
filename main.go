@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"crypto/md5"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -136,62 +137,63 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	msg.Timestamp = now.Format(time.RFC3339)
 
 	index := fmt.Sprintf("%s-%s/%s", esIndexName, now.Format(esIndexDateFormat), esType)
-	url := fmt.Sprintf("%s/%s", esURL, index)
+	for _, a := range msg.Alerts {
 
-	b, err = json.Marshal(&msg)
-	if err != nil {
-		notificationsErrored.Inc()
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		log.Print(err)
-		return
-	}
+		b, err = json.Marshal(&a)
+		if err != nil {
+			notificationsErrored.Inc()
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			log.Print(err)
+			return
+		}
 
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(b))
-	if err != nil {
-		notificationsErrored.Inc()
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		log.Print(err)
-		return
-	}
+		id := calcIndex(b)
+		url := fmt.Sprintf("%s/%s/%s", esURL, index, id)
 
-	req.Header.Set("User-Agent", versionString)
-	req.Header.Set("Content-Type", "application/json")
+		req, err := http.NewRequest("POST", url, bytes.NewBuffer(b))
+		if err != nil {
+			notificationsErrored.Inc()
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			log.Print(err)
+			return
+		}
 
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		notificationsErrored.Inc()
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		log.Print(err)
-		return
-	}
+		req.Header.Set("User-Agent", versionString)
+		req.Header.Set("Content-Type", "application/json")
 
-	body, err := ioutil.ReadAll(resp.Body)
-	defer resp.Body.Close()
-	if err != nil {
-		notificationsErrored.Inc()
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		log.Print(err)
-		return
-	}
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			notificationsErrored.Inc()
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			log.Print(err)
+			return
+		}
 
-	if resp.StatusCode/100 != 2 {
-		notificationsErrored.Inc()
-		err := fmt.Errorf("POST to Elasticsearch on %q returned HTTP %d:  %s", url, resp.StatusCode, body)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		log.Print(err)
-		return
+		body, err := ioutil.ReadAll(resp.Body)
+		defer resp.Body.Close()
+		if err != nil {
+			notificationsErrored.Inc()
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			log.Print(err)
+			return
+		}
+
+		if resp.StatusCode/100 != 2 {
+			notificationsErrored.Inc()
+			err := fmt.Errorf("POST to Elasticsearch on %q returned HTTP %d:  %s", url, resp.StatusCode, body)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			log.Print(err)
+			return
+		}
 	}
 }
 
+func calcIndex(b []byte) string {
+	return fmt.Sprintf("%x", md5.Sum(b))
+}
+
 type notification struct {
-	Alerts []struct {
-		Annotations  map[string]string `json:"annotations"`
-		EndsAt       time.Time         `json:"endsAt"`
-		GeneratorURL string            `json:"generatorURL"`
-		Labels       map[string]string `json:"labels"`
-		StartsAt     time.Time         `json:"startsAt"`
-		Status       string            `json:"status"`
-	} `json:"alerts"`
+	Alerts            []alert           `json:"alerts"`
 	CommonAnnotations map[string]string `json:"commonAnnotations"`
 	CommonLabels      map[string]string `json:"commonLabels"`
 	ExternalURL       string            `json:"externalURL"`
@@ -203,4 +205,13 @@ type notification struct {
 
 	// Timestamp records when the alert notification was received
 	Timestamp string `json:"@timestamp"`
+}
+
+type alert struct {
+	Annotations  map[string]string `json:"annotations"`
+	EndsAt       time.Time         `json:"endsAt"`
+	GeneratorURL string            `json:"generatorURL"`
+	Labels       map[string]string `json:"labels"`
+	StartsAt     time.Time         `json:"startsAt"`
+	Status       string            `json:"status"`
 }
