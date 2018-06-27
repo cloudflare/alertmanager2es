@@ -134,11 +134,11 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	now := time.Now()
 	// ISO8601: https://github.com/golang/go/issues/2141#issuecomment-66058048
-	msg.Timestamp = now.Format(time.RFC3339)
+	timestamp := now.Format(time.RFC3339)
 
 	index := fmt.Sprintf("%s-%s/%s", esIndexName, now.Format(esIndexDateFormat), esType)
 	for _, a := range msg.Alerts {
-
+		a.Timestamp = timestamp
 		b, err = json.Marshal(&a)
 		if err != nil {
 			notificationsErrored.Inc()
@@ -202,9 +202,6 @@ type notification struct {
 	Status            string            `json:"status"`
 	Version           string            `json:"version"`
 	GroupKey          string            `json:"groupKey"`
-
-	// Timestamp records when the alert notification was received
-	Timestamp string `json:"@timestamp"`
 }
 
 type alert struct {
@@ -214,4 +211,7 @@ type alert struct {
 	Labels       map[string]string `json:"labels"`
 	StartsAt     time.Time         `json:"startsAt"`
 	Status       string            `json:"status"`
+
+	// Timestamp records when the alert notification was received
+	Timestamp string `json:"@timestamp"`
 }

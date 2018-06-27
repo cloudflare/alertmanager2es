@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 )
@@ -55,14 +56,17 @@ func TestHappyPath(t *testing.T) {
 		t.Fatalf("expected request method %s, got %s", expected, request.Method)
 	}
 
+	//discard ID because it changes constantly :)
 	expected = fmt.Sprintf("/alertmanager-%s/alert_group", time.Now().Format("2006.01"))
-	if request.RequestURI != expected {
+	uri := strings.Join(strings.Split(request.RequestURI, "/")[:3], "/")
+	if uri != expected {
 		t.Fatalf("expected request path %s, got %s", expected, request.RequestURI)
 	}
 
 	// the timestamp changes every second, making it hard to test, so strip it off before comparing
 	lengthOfTimestamp := 42
 	l := len(esDocument) - lengthOfTimestamp
+
 	if !bytes.Equal(esDocument[:l], requestBody[:l]) {
 		t.Fatalf("expected payload %q, got %q", esDocument[:l], requestBody[:l])
 	}
@@ -146,4 +150,4 @@ var amNotification = []byte(`{
 	"groupKey": "{}/{}/{notify=\"default\":{alertname=\"Foo_Bar\", instance=\"foo\"}"
 }`)
 
-var esDocument = []byte(`{"alerts":[{"annotations":{"link":"https://example.com/Foo+Bar","summary":"Alert summary"},"endsAt":"0001-01-01T00:00:00Z","generatorURL":"https://example.com","labels":{"alertname":"Foo_Bar","instance":"foo"},"startsAt":"2017-02-02T16:51:13.507955756Z","status":"firing"}],"commonAnnotations":{"link":"https://example.com/Foo+Bar","summary":"Alert summary"},"commonLabels":{"alertname":"Foo_Bar","instance":"foo"},"externalURL":"https://alertmanager.example.com","groupLabels":{"alertname":"Foo_Bar"},"receiver":"alertmanager2es","status":"firing","version":"4","groupKey":"{}/{}/{notify=\"default\":{alertname=\"Foo_Bar\", instance=\"foo\"}","@timestamp":"2017-02-02T19:37:22+01:00"}`)
+var esDocument = []byte(`{"annotations":{"link":"https://example.com/Foo+Bar","summary":"Alert summary"},"endsAt":"0001-01-01T00:00:00Z","generatorURL":"https://example.com","labels":{"alertname":"Foo_Bar","instance":"foo"},"startsAt":"2017-02-02T16:51:13.507955756Z","status":"firing","@timestamp":"2017-02-02T19:37:22+01:00"}`)
