@@ -94,7 +94,7 @@ func TestUserAgentSetWhenPostingToElasticsearch(t *testing.T) {
 	w, r := recordedRequest(t, s.URL+"/webhook")
 	handler(w, r)
 
-	expected := regexp.MustCompile(`^alertmanager2es .*? \(go\d.\d(?:.\d)?\)$`)
+	expected := regexp.MustCompile(`^alertmanager2es .*? \(go\d.\d+(?:.\d+)?\)$`)
 	if !expected.MatchString(userAgent) {
 		t.Fatalf("expected user agent to match %s, got %q", expected.String(), userAgent)
 	}
