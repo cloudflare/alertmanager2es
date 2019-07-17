@@ -23,6 +23,7 @@ const supportedWebhookVersion = "4"
 var (
 	addr        = "localhost:9097"
 	application = "alertmanager2es"
+	timeout     = int64(20)
 	// See AlertManager docs for info on alert groupings:
 	// https://prometheus.io/docs/alerting/configuration/#route-<route>
 	esType = "alert_group"
@@ -63,6 +64,7 @@ func main() {
 	flag.StringVar(&esIndexName, "esIndexName", esIndexName, "Elasticsearch index name")
 	flag.StringVar(&esType, "esType", esType, "Elasticsearch document type ('_type')")
 	flag.StringVar(&esURL, "esURL", esURL, "Elasticsearch HTTP URL")
+	flag.Int64Var(&timeout, "timeout", timeout, "Timeout for ES connection")
 	flag.BoolVar(&showVersion, "version", false, "Print version number and exit")
 	flag.Parse()
 
@@ -77,11 +79,11 @@ func main() {
 		os.Exit(2)
 	}
 
-	http.DefaultClient.Timeout = 10 * time.Second
+	http.DefaultClient.Timeout = time.Duration(timeout) * time.Second
 	s := &http.Server{
 		Addr:         addr,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 10 * time.Second,
+		ReadTimeout:  time.Duration(timeout) * time.Second,
+		WriteTimeout: time.Duration(timeout) * time.Second,
 	}
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
