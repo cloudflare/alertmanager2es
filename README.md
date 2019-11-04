@@ -127,8 +127,8 @@ sending data:
             "match": "*",
             "match_mapping_type": "string",
             "mapping": {
-              "type": "string",
-              "index": "not_analyzed",
+              "type": "keyword",
+              "index": "true",
               "ignore_above": 1024,
               "doc_values": true
             }
