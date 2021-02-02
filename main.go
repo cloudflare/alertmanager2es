@@ -9,6 +9,9 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"crypto/tls"
+	"encoding/base64"
+	"strings"
 	"os"
 	"runtime"
 	"time"
@@ -29,6 +32,9 @@ var (
 	esIndexDateFormat = "2006.01"
 	esIndexName       = "alertmanager"
 	esURL             string
+	esUser            string
+	esPass            string
+	skipSSLVerification = false
 	revision          = "unknown"
 	versionString     = fmt.Sprintf("%s %s (%s)", application, revision, runtime.Version())
 
@@ -49,6 +55,15 @@ var (
 	})
 )
 
+func empty(s string) bool {
+    return len(strings.TrimSpace(s)) == 0
+}
+
+func basicAuth(username, password string) string {
+	auth := username + ":" + password
+	return base64.StdEncoding.EncodeToString([]byte(auth))
+}
+
 func init() {
 	prometheus.MustRegister(notificationsErrored)
 	prometheus.MustRegister(notificationsInvalid)
@@ -62,9 +77,12 @@ func main() {
 	flag.StringVar(&esIndexName, "esIndexName", esIndexName, "Elasticsearch index name")
 	flag.StringVar(&esType, "esType", esType, "Elasticsearch document type ('_type')")
 	flag.StringVar(&esURL, "esURL", esURL, "Elasticsearch HTTP URL")
+	flag.StringVar(&esUser, "esUser", os.Getenv("ES_USER"), "Elasticsearch user (default value is taken from $ES_USER environment variable)")
+	flag.StringVar(&esPass, "esPass", os.Getenv("ES_PASS"), "Elasticsearch password (default value is taken from $ES_PASS environment variable)")
+	flag.BoolVar(&skipSSLVerification, "skipSSLVerification", false, "Skip SSL verification")
 	flag.BoolVar(&showVersion, "version", false, "Print version number and exit")
 	flag.Parse()
-	
+
 	if showVersion {
 		fmt.Println(versionString)
 		os.Exit(0)
@@ -146,6 +164,10 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+    if skipSSLVerification != false {
+        http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+    }
+
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(b))
 	if err != nil {
 		notificationsErrored.Inc()
@@ -157,14 +179,16 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	req.Header.Set("User-Agent", versionString)
 	req.Header.Set("Content-Type", "application/json")
 
-	esUser := os.Getenv("ES_USER")
-	esPass := os.Getenv("ES_PASS")
+	client := new(http.Client)
+    if !empty(esUser) && !empty(esPass) {
+        req.Header.Add("Authorization","Basic " + basicAuth(esUser,esPass))
+        client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+            req.Header.Add("Authorization","Basic " + basicAuth(esUser,esPass))
+            return nil
+        }
+    }
 
-	if len(esUser) != 0 && len(esPass) != 0 {
-		req.SetBasicAuth(esUser, esPass)
-	}
-
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		notificationsErrored.Inc()
 		http.Error(w, err.Error(), http.StatusInternalServerError)
