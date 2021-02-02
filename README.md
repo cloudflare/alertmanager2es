@@ -103,18 +103,17 @@ sending data:
 
 ```json
 {
-  "template": "alertmanager-2*",
-  "settings": {
-    "number_of_shards": 1,
-    "number_of_replicas": 1,
-    "index.refresh_interval": "10s",
-    "index.query.default_field": "groupLabels.alertname"
-  },
-  "mappings": {
-    "_default_": {
-      "_all": {
-        "enabled": false
-      },
+  "index_patterns": [
+    "alertmanager-2*"
+  ],
+  "template": {
+    "settings": {
+      "number_of_shards": 1,
+      "number_of_replicas": 1,
+      "index.refresh_interval": "10s",
+      "index.query.default_field": "groupLabels.alertname"
+    },
+    "mappings": {
       "properties": {
         "@timestamp": {
           "type": "date",
@@ -127,10 +126,8 @@ sending data:
             "match": "*",
             "match_mapping_type": "string",
             "mapping": {
-              "type": "string",
-              "index": "not_analyzed",
-              "ignore_above": 1024,
-              "doc_values": true
+              "type": "text",
+              "ignore_above": 2048
             }
           }
         }
