@@ -34,7 +34,7 @@ var (
 	esURL             string
 	esUser            string
 	esPass            string
-	skipSSLVerification = false
+	disableCertCheck  = false
 	revision          = "unknown"
 	versionString     = fmt.Sprintf("%s %s (%s)", application, revision, runtime.Version())
 
@@ -56,7 +56,7 @@ var (
 )
 
 func empty(s string) bool {
-    return len(strings.TrimSpace(s)) == 0
+	return len(strings.TrimSpace(s)) == 0
 }
 
 func basicAuth(username, password string) string {
@@ -79,7 +79,7 @@ func main() {
 	flag.StringVar(&esURL, "esURL", esURL, "Elasticsearch HTTP URL")
 	flag.StringVar(&esUser, "esUser", os.Getenv("ES_USER"), "Elasticsearch user (default value is taken from $ES_USER environment variable)")
 	flag.StringVar(&esPass, "esPass", os.Getenv("ES_PASS"), "Elasticsearch password (default value is taken from $ES_PASS environment variable)")
-	flag.BoolVar(&skipSSLVerification, "skipSSLVerification", false, "Skip SSL verification")
+	flag.BoolVar(&disableCertCheck, "disableCertCheck", false, "Disable SSL certificate check")
 	flag.BoolVar(&showVersion, "version", false, "Print version number and exit")
 	flag.Parse()
 
@@ -164,9 +164,9 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-    if skipSSLVerification != false {
-        http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-    }
+	if disableCertCheck {
+		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	}
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(b))
 	if err != nil {
@@ -180,13 +180,13 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	req.Header.Set("Content-Type", "application/json")
 
 	client := new(http.Client)
-    if !empty(esUser) && !empty(esPass) {
-        req.Header.Add("Authorization","Basic " + basicAuth(esUser,esPass))
-        client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
-            req.Header.Add("Authorization","Basic " + basicAuth(esUser,esPass))
-            return nil
-        }
-    }
+	if !empty(esUser) && !empty(esPass) {
+		req.Header.Add("Authorization","Basic " + basicAuth(esUser,esPass))
+		client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+			req.Header.Add("Authorization","Basic " + basicAuth(esUser,esPass))
+			return nil
+		}
+	}
 
 	resp, err := client.Do(req)
 	if err != nil {
