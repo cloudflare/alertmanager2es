@@ -219,6 +219,7 @@ type notification struct {
 		Annotations  map[string]string `json:"annotations"`
 		EndsAt       time.Time         `json:"endsAt"`
 		GeneratorURL string            `json:"generatorURL"`
+		Fingerprint  string    	       `json:"fingerprint"`
 		Labels       map[string]string `json:"labels"`
 		StartsAt     time.Time         `json:"startsAt"`
 		Status       string            `json:"status"`
