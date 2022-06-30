@@ -2,6 +2,8 @@ package main
 
 import (
 	"bytes"
+	"crypto/tls"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -9,11 +11,9 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"crypto/tls"
-	"encoding/base64"
-	"strings"
 	"os"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -143,7 +143,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	if msg.Version != supportedWebhookVersion {
 		notificationsInvalid.Inc()
-		err := fmt.Errorf("Do not understand webhook version %q, only version %q is supported.", msg.Version, supportedWebhookVersion)
+		err := fmt.Errorf("do not understand webhook version %q, only version %q is supported", msg.Version, supportedWebhookVersion)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		log.Print(err)
 		return
@@ -181,9 +181,9 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	client := new(http.Client)
 	if !empty(esUser) && !empty(esPass) {
-		req.Header.Add("Authorization","Basic " + basicAuth(esUser,esPass))
+		req.Header.Add("Authorization", "Basic "+basicAuth(esUser, esPass))
 		client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
-			req.Header.Add("Authorization","Basic " + basicAuth(esUser,esPass))
+			req.Header.Add("Authorization", "Basic "+basicAuth(esUser, esPass))
 			return nil
 		}
 	}
