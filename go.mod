@@ -2,14 +2,16 @@ module github.com/cloudflare/alertmanager2es
 
 go 1.18
 
-require github.com/prometheus/client_golang v0.8.1-0.20161124155732-575f371f7862
+require github.com/prometheus/client_golang v1.11.1
 
 require (
-	github.com/beorn7/perks v0.0.0-20160804104726-4c0e84591b9a // indirect
-	github.com/golang/protobuf v0.0.0-20161117033126-8ee79997227b // indirect
+	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/cespare/xxhash/v2 v2.1.1 // indirect
+	github.com/golang/protobuf v1.4.3 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
-	github.com/prometheus/client_model v0.0.0-20150212101744-fa8ad6fec335 // indirect
-	github.com/prometheus/common v0.0.0-20161220174553-6d76b79f2398 // indirect
-	github.com/prometheus/procfs v0.0.0-20161206222141-fcdb11ccb438 // indirect
-	golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f // indirect
+	github.com/prometheus/client_model v0.2.0 // indirect
+	github.com/prometheus/common v0.26.0 // indirect
+	github.com/prometheus/procfs v0.6.0 // indirect
+	golang.org/x/sys v0.0.0-20210603081109-ebe580a85c40 // indirect
+	google.golang.org/protobuf v1.26.0-rc.1 // indirect
 )
