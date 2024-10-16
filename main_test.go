@@ -120,6 +120,7 @@ var amNotification = []byte(`{
 			},
 			"endsAt": "0001-01-01T00:00:00Z",
 			"generatorURL": "https://example.com",
+			"fingerprint": "dd19ae3d4e06ac55",
 			"labels": {
 				"alertname": "Foo_Bar",
 				"instance": "foo"
